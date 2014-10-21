@@ -511,6 +511,7 @@ enum pnfs_layouttype {
 	LAYOUT_NFSV4_1_FILES  = 1,
 	LAYOUT_OSD2_OBJECTS = 2,
 	LAYOUT_BLOCK_VOLUME = 3,
+	LAYOUT_PLACEMENT = 0xC0FFEE00,
 };
 
 /* used for both layout return and recall */

@@ -30,5 +30,6 @@ nfsv4-$(CONFIG_SYSCTL)	+= nfs4sysctl.o
 nfsv4-$(CONFIG_NFS_V4_1)	+= pnfs.o pnfs_dev.o
 
 obj-$(CONFIG_PNFS_FILE_LAYOUT) += filelayout/
+obj-$(CONFIG_PNFS_PLACEMENT_LAYOUT) += placelayout/
 obj-$(CONFIG_PNFS_OBJLAYOUT) += objlayout/
 obj-$(CONFIG_PNFS_BLOCK) += blocklayout/

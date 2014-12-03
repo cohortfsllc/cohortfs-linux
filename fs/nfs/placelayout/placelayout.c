@@ -564,6 +564,7 @@ placelayout_read_pagelist(struct nfs_pgio_header *hdr)
 	return PNFS_ATTEMPTED;
 }
 
+void placelayout_dump_handle(const char *func, struct nfs_fh *fh);
 /* Perform async writes. */
 static enum pnfs_try_status
 placelayout_write_pagelist(struct nfs_pgio_header *hdr, int sync)
@@ -595,8 +596,10 @@ placelayout_write_pagelist(struct nfs_pgio_header *hdr, int sync)
 	hdr->ds_clp = ds->ds_clp;
 	hdr->ds_idx = idx;
 	fh = nfs4_pl_select_ds_fh(lseg, j);
-	if (fh)
+	if (fh) {
+		placelayout_dump_handle(__func__, fh);
 		hdr->args.fh = fh;
+	}
 	hdr->args.offset = placelayout_get_dserver_offset(lseg, offset);
 
 	/* Perform an asynchronous write */
@@ -717,7 +720,8 @@ placelayout_decode_layout(struct pnfs_layout_hdr *flo,
 	xdr_init_decode_pages(&stream, &buf, lgr->layoutp->pages, lgr->layoutp->len);
 	xdr_set_scratch_buffer(&stream, page_address(scratch), PAGE_SIZE);
 
-	/* 20 = ufl_util (4), num_fh (4) */
+	/* 20 = ufl_util (4), first_stripe_index (4), pattern_offset (8),
+	 * num_fh (4) */
 	p = xdr_inline_decode(&stream, NFS4_DEVICEID4_SIZE + 20);
 	if (unlikely(!p))
 		goto out_err;
@@ -729,14 +733,16 @@ placelayout_decode_layout(struct pnfs_layout_hdr *flo,
 	nfl_util = be32_to_cpup(p++);
 	/*if (nfl_util & NFL4_UFLG_COMMIT_THRU_MDS)*/
 		/*fl->commit_through_mds = 1;*/
-	fl->stripe_unit = nfl_util & ~NFL4_UFLG_MASK;
+	fl->stripe_unit = nfl_util;
 	fl->stripe_type = STRIPE_DENSE;
 	fl->commit_through_mds = 1;
 
+	fl->first_stripe_index = be32_to_cpup(p++);
+	p = xdr_decode_hyper(p, &fl->pattern_offset);
 	fl->num_fh = be32_to_cpup(p++);
 
-	dprintk("%s: nfl_util 0x%X num_fh %u\n",
-		__func__, nfl_util, fl->num_fh);
+	dprintk("%s: nfl_util 0x%X first_stripe=%#x pattern_offset=%#llx num_fh %u\n",
+		__func__, nfl_util, fl->first_stripe_index, fl->pattern_offset, fl->num_fh);
 
 	/* Note that a zero value for num_fh is legal for STRIPE_SPARSE.
 	 * Futher checking is done in placelayout_check_layout */

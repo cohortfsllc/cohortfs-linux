@@ -269,28 +269,36 @@ pl_decode_ds_addr(struct net *net, struct xdr_stream *streamp, gfp_t gfp_flags)
 
 	/* r_netid */
 	p = xdr_inline_decode(streamp, 4);
+	dprintk("%s: 1 %p\n", __func__, p);
 	if (unlikely(!p))
 		goto out_err;
 	nlen = be32_to_cpup(p++);
+	dprintk("%s: 1 %d\n", __func__, nlen);
 
 	p = xdr_inline_decode(streamp, nlen);
+	dprintk("%s: 2 %p\n", __func__, p);
 	if (unlikely(!p))
 		goto out_err;
 
 	netid = kmalloc(nlen+1, gfp_flags);
+	dprintk("%s: 3 %p\n", __func__, netid);
 	if (unlikely(!netid))
 		goto out_err;
 
 	netid[nlen] = '\0';
 	memcpy(netid, p, nlen);
+	dprintk("%s: 3 %s\n", __func__, netid);
 
 	/* r_addr: ip/ip6addr with port in dec octets - see RFC 5665 */
 	p = xdr_inline_decode(streamp, 4);
+	dprintk("%s: 4 %p\n", __func__, p);
 	if (unlikely(!p))
 		goto out_free_netid;
 	rlen = be32_to_cpup(p);
+	dprintk("%s: 4 rlen: %d\n", __func__, rlen);
 
 	p = xdr_inline_decode(streamp, rlen);
+	dprintk("%s: 5 %p\n", __func__, p);
 	if (unlikely(!p))
 		goto out_free_netid;
 
@@ -327,6 +335,7 @@ pl_decode_ds_addr(struct net *net, struct xdr_stream *streamp, gfp_t gfp_flags)
 	*portstr = '\0';
 
 	da = kzalloc(sizeof(*da), gfp_flags);
+	dprintk("%s: 6 %p\n", __func__, da);
 	if (unlikely(!da))
 		goto out_free_buf;
 
@@ -484,6 +493,11 @@ nfs4_pl_alloc_deviceid_node(struct nfs_server *server, struct pnfs_device *pdev,
 	nfs4_init_deviceid_node(&dsaddr->id_node, server, &pdev->dev_id);
 
 	for (i = 0; i < dsaddr->num_ds; i++) {
+		/* multipath count (always one; skip */
+		p = xdr_inline_decode(&stream, 4);
+		if (unlikely(!p))
+			goto out_err_free_deviceid;
+
 		da = pl_decode_ds_addr(server->nfs_client->cl_net, &stream, gfp_flags);
 		if (!da) {
 			dprintk("%s: no suitable DS address found\n", __func__);

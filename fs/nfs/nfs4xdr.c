@@ -2490,6 +2490,24 @@ static void nfs4_xdr_enc_getacl(struct rpc_rqst *req, struct xdr_stream *xdr,
 	encode_nops(&hdr);
 }
 
+typedef struct __attribute__ ((__packed__)) file_handle_v4 {
+	uint8_t fhversion;	/*< Set to 0x41 to separate from Linux knfsd */
+	uint16_t exportid;	/*< Must be correlated to exportlist_t::id */
+	uint16_t flags;		/*< To replace things like ds_flag */
+	uint8_t fs_len;		/*< Length of opaque handle */
+	uint8_t fsopaque[];	/*< FSAL handle */
+} file_handle_v4_t;
+
+void
+placelayout_dump_handle(const char *func, struct nfs_fh *fh)
+{
+	file_handle_v4_t *gfh = (file_handle_v4_t*)fh->data;
+
+	dfprintk(PNFS_LD, "dump_handle: %s: fhversion=%#hhx exportid=%#hx flags=%#hx fs_len=%#hhx",
+	    func, gfh->fhversion, gfh->exportid, gfh->flags, gfh->fs_len);
+}
+EXPORT_SYMBOL_GPL(placelayout_dump_handle);
+
 /*
  * Encode a WRITE request
  */
@@ -2503,6 +2521,7 @@ static void nfs4_xdr_enc_write(struct rpc_rqst *req, struct xdr_stream *xdr,
 	encode_compound_hdr(xdr, req, &hdr);
 	encode_sequence(xdr, &args->seq_args, &hdr);
 	encode_putfh(xdr, args->fh, &hdr);
+	placelayout_dump_handle(__func__, args->fh);
 	encode_write(xdr, args, &hdr);
 	req->rq_snd_buf.flags |= XDRBUF_WRITE;
 	if (args->bitmask)

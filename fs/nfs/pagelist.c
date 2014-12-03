@@ -5,7 +5,7 @@
  * The main purpose of these routines is to provide support for the
  * coalescing of several requests into a single RPC call.
  *
- * Copyright 2000, 2001 (c) Trond Myklebust <trond.myklebust@fys.uio.no>
+ * Copyright 2000-2014, 2001 (c) Trond Myklebust <trond.myklebust@fys.uio.no>
  *
  */
 
@@ -612,7 +612,7 @@ int nfs_initiate_pgio(struct rpc_clnt *clnt, struct nfs_pgio_header *hdr,
 
 	hdr->rw_ops->rw_initiate(hdr, &msg, &task_setup_data, how);
 
-	dprintk("NFS: %5u initiated pgio call "
+	dfprintk(PNFS_LD, "NFS: %5u initiated pgio call "
 		"(req %s/%llu, %u bytes @ offset %llu)\n",
 		hdr->task.tk_pid,
 		hdr->inode->i_sb->s_id,

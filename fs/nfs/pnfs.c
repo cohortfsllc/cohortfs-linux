@@ -1474,6 +1474,7 @@ pnfs_generic_pg_test(struct nfs_pageio_descriptor *pgio, struct nfs_page *prev,
 	u64 seg_end, req_start, seg_left;
 
 	size = nfs_generic_pg_test(pgio, prev, req);
+	/*dprintk("%s nfs_generic_pg_test=%u\n", __func__, size);*/
 	if (!size)
 		return 0;
 

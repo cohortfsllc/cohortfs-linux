@@ -475,6 +475,7 @@ nfs_wait_on_request(struct nfs_page *req)
 size_t nfs_generic_pg_test(struct nfs_pageio_descriptor *desc,
 			   struct nfs_page *prev, struct nfs_page *req)
 {
+	/*dfprintk(PNFS, "%s pg_count=%zu, pg_bsize=%zu\n", __func__, desc->pg_count, desc->pg_bsize);*/
 	if (desc->pg_count > desc->pg_bsize) {
 		/* should never happen */
 		WARN_ON_ONCE(1);
@@ -485,10 +486,12 @@ size_t nfs_generic_pg_test(struct nfs_pageio_descriptor *desc,
 	 * Limit the request size so that we can still allocate a page array
 	 * for it without upsetting the slab allocator.
 	 */
+	/*dfprintk(PNFS, "%s PAGES=%zu\n", __func__, ((desc->pg_count + req->wb_bytes) >> PAGE_SHIFT) * sizeof(struct page));*/
 	if (((desc->pg_count + req->wb_bytes) >> PAGE_SHIFT) *
 			sizeof(struct page) > PAGE_SIZE)
 		return 0;
 
+	/*dfprintk(PNFS, "%s a=%zu, b=%zu\n", __func__, desc->pg_bsize - desc->pg_count, (size_t)req->wb_bytes);*/
 	return min(desc->pg_bsize - desc->pg_count, (size_t)req->wb_bytes);
 }
 EXPORT_SYMBOL_GPL(nfs_generic_pg_test);
@@ -870,6 +873,7 @@ static int nfs_pageio_do_add_request(struct nfs_pageio_descriptor *desc,
 		return 0;
 	nfs_list_remove_request(req);
 	nfs_list_add_request(req, &desc->pg_list);
+	dprintk("%s new request count=%u old count=%zu new count=%zu\n", __func__, req->wb_bytes, desc->pg_count, desc->pg_count+ req->wb_bytes);
 	desc->pg_count += req->wb_bytes;
 	return 1;
 }

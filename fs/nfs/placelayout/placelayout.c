@@ -264,8 +264,10 @@ placelayout_set_layoutcommit(struct nfs_pgio_header *hdr)
 {
 
 	if (PLACELAYOUT_LSEG(hdr->lseg)->commit_through_mds ||
-	    hdr->res.verf->committed != NFS_DATA_SYNC)
+	    hdr->res.verf->committed != NFS_DATA_SYNC) {
+		dprintk("%s Not setting: %u %d\n", __func__, PLACELAYOUT_LSEG(hdr->lseg)->commit_through_mds, hdr->res.verf->committed);
 		return;
+	}
 
 	pnfs_set_layoutcommit(hdr);
 	dprintk("%s inode %lu pls_end_pos %lu\n", __func__, hdr->inode->i_ino,
@@ -360,6 +362,7 @@ static int placelayout_write_done_cb(struct rpc_task *task,
 	err = placelayout_async_handle_error(task, hdr->args.context->state,
 					    hdr->ds_clp, hdr->lseg);
 
+	dprintk("%s err %d\n", __func__, err);
 	switch (err) {
 	case -NFS4ERR_RESET_TO_MDS:
 		placelayout_reset_write(hdr);
@@ -907,6 +910,7 @@ placelayout_pg_test(struct nfs_pageio_descriptor *pgio, struct nfs_page *prev,
 
 	/* calls nfs_generic_pg_test */
 	size = pnfs_generic_pg_test(pgio, prev, req);
+	/*dprintk("%s pnfs_generic_pg_test=%u\n", __func__, size);*/
 	if (!size)
 		return 0;
 
@@ -925,6 +929,7 @@ placelayout_pg_test(struct nfs_pageio_descriptor *pgio, struct nfs_page *prev,
 	div_u64_rem((u64)req_offset(req) - segment_offset,
 			stripe_unit,
 			&stripe_offset);
+	/*dprintk("%s stripe_offset=%u\n", __func__, stripe_offset);*/
 	WARN_ON_ONCE(stripe_offset > stripe_unit);
 	if (stripe_offset >= stripe_unit)
 		return 0;

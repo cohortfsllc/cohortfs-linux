@@ -735,7 +735,7 @@ placelayout_decode_layout(struct pnfs_layout_hdr *flo,
 		/*fl->commit_through_mds = 1;*/
 	fl->stripe_unit = nfl_util;
 	fl->stripe_type = STRIPE_DENSE;
-	fl->commit_through_mds = 1;
+	fl->commit_through_mds = 0;
 
 	fl->first_stripe_index = be32_to_cpup(p++);
 	p = xdr_decode_hyper(p, &fl->pattern_offset);
